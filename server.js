@@ -34,11 +34,12 @@ const server = http.createServer((req, res) => {
        return req.on('end', () => {
             const parsedBody = Buffer.concat(body).toString(); // Concatenate and convert the collected data to a string
             const message = parsedBody.split('=')[1]; // Extract the message content from the parsed data
-            fs.writeFileSync('message.txt', message); // Write the message to 'message.txt' (synchronously)
-            // Redirect the user back to the root path with a 302 status code
-            res.statusCode = 302;
-            res.setHeader('Location', '/');
-            return res.end(); // End the response
+            fs.writeFile('message.txt', message, ()=>{
+                // Redirect the user back to the root path with a 302 status code
+                res.statusCode = 302;
+                res.setHeader('Location', '/');
+                return res.end(); // End the response
+            }); // Write the message to 'message.txt' (synchronously)
         });
 
     }
