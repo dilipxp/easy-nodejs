@@ -1,51 +1,58 @@
-// Import the 'http' module, which provides utilities for creating an HTTP server
-const { log } = require('console');
-const http = require('http');
-const fs = require("fs");
+const http = require('http'); // Import the 'http' module to create an HTTP server
+const fs = require("fs"); // Import the 'fs' module for file system operations
+const { on } = require('events'); // Import the 'events' module for event handling
+const { log } = require('console'); // Import the 'console' module for logging
 
-// Create the server using the 'createServer' method, which takes a callback function
-// The callback function is executed each time a request is received
-// 'req' is the request object, and 'res' is the response object
+// Create an HTTP server that handles incoming requests
 const server = http.createServer((req, res) => {
-    // Log a message to the console whenever the server receives a request
-    console.log("Server is running");
+    console.log("Server is running"); // Log a message indicating the server is running
 
-    // Log a message to the console 
-    // log(req.url, req.method, req.headers)
+    const url = req.url; // Get the URL of the incoming request
+    const method = req.method; // Get the HTTP method (GET, POST, etc.) of the request
 
-    // Sending a response back to the client
-    // Status code: 200 (OK), Content-Type: text/plain
-    // res.writeHead(200, { 'Content-Type': 'text/plain' });
-    // res.end('Hello, World!\n'); // End the response and send the string
-
-    const url = req.url;
-    const method  = req.method;
-    if(url === '/' ){
-        res.write('<html>')
-        res.write('<head> <title>Enter Message</title></head>');
-        res.write('<body> <form action="/message" method="POST"><input type="text"><button type="submit">Click me!</button></form> </body>')
-        res.write('</html>')
-        return res.end();
+    // Check if the request URL is '/' (root path)
+    if (url === '/') {
+        // Send a simple HTML form as the response
+        res.write('<html>');
+        res.write('<head><title>Enter Message</title></head>');
+        res.write('<body><form action="/message" method="POST"><input type="text" name="message"><button type="submit">Click me!</button></form></body>');
+        res.write('</html>');
+        return res.end(); // End the response
     }
 
-    if(url === '/message' && method === 'POST'){
-        fs.writeFileSync('message.txt', "Dummy")
+    // Check if the request URL is '/message' and the method is 'POST'
+    if (url === '/message' && method === 'POST') {
+        const body = []; // Initialize an empty array to collect incoming data chunks
+
+        // Listen for 'data' events to collect chunks of the request body
+        req.on('data', (chunk) => {
+            log(chunk); // Log each chunk of data received
+            body.push(chunk); // Push the chunk into the 'body' array
+        });
+
+        // Listen for the 'end' event, indicating all data has been received
+        req.on('end', () => {
+            const parsedBody = Buffer.concat(body).toString(); // Concatenate and convert the collected data to a string
+            const message = parsedBody.split('=')[1]; // Extract the message content from the parsed data
+            fs.writeFileSync('message.txt', message); // Write the message to 'message.txt' (synchronously)
+        });
+
+        // Redirect the user back to the root path with a 302 status code
         res.statusCode = 302;
         res.setHeader('Location', '/');
-        return res.end();
-
+        return res.end(); // End the response
     }
 
-    res.setHeader("Content-Type", 'text/html');
-    res.write('<html>')
-    res.write('<head> <title>Easy Node</title></head>');
-    res.write('<body> <h1>Easy Node Project</h1> </body>')
-    res.write('</html>')
-    res.end();
+    // For any other URL, send a simple HTML page as the response
+    res.setHeader("Content-Type", 'text/html'); // Set the Content-Type header to 'text/html'
+    res.write('<html>');
+    res.write('<head><title>Easy Node</title></head>');
+    res.write('<body><h1>Easy Node Project</h1></body>');
+    res.write('</html>');
+    res.end(); // End the response
 });
 
-// Listen on port 3000 for incoming requests
-// This starts the server and makes it listen for HTTP requests on the specified port
+// Start the server and listen on port 3000
 server.listen(3000, () => {
-    console.log("Server is listening on port 3000");
+    console.log("Server is listening on port 3000"); // Log a message indicating the server is listening
 });
