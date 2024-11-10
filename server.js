@@ -1,25 +1,24 @@
-const express = require('express')
+const path = require('path');
+const express = require('express');
 
-const bodyParser = require('body-parser');
 const app = express();
 
 
-// Parsing 
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+
+const bodyParser = require('body-parser');
+
+
+// Parsing the incomming request.
 app.use(bodyParser.urlencoded({extended:false}));
 
-//  Routing
-app.use('/add-customer',(req, res, next)=>{
-    res.send('<form action="/customer" method="POST"> <input type="text" name="title"><button type="submit">add customer</button></form>')
-})
+app.use('/admin',adminRoutes);
+app.use(shopRoutes);
 
-app.use('/customer', (req, res, next)=>{
-    console.log(req.body)
-    res.redirect('/')
-})
 
-app.use('/',(req, res, next)=>{
-    res.send('<h1>Hello Frome ExpressJs</h1>')
-})
-
+app.use((req, res, next)=>{
+    res.status(404).sendFile(path.join(__dirname,'views' ,'error.html'));
+});
 
 app.listen(3000);
